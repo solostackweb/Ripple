@@ -1,0 +1,110 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+type IconName = "home" | "pulse" | "map" | "source" | "task" | "plug" | "search" | "plus" | "calendar" | "pin" | "users" | "check" | "arrow" | "spark" | "close" | "mail" | "file" | "clock" | "chevron" | "menu" | "bell";
+
+function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
+  const paths: Record<IconName, React.ReactNode> = {
+    home: <><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></>,
+    pulse: <path d="M3 12h4l2-5 4 10 2-5h6"/>, map: <><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="m8 11 8-4M8 13l8 4"/></>,
+    source: <><path d="M5 3h11l3 3v15H5z"/><path d="M14 3v5h5M8 12h8M8 16h6"/></>, task: <><path d="M9 5h11M9 12h11M9 19h11"/><path d="m3 5 1 1 2-2m-3 8 1 1 2-2m-3 8 1 1 2-2"/></>,
+    plug: <><path d="M8 12h8M9 8v4m6-4v4M7 12v2a5 5 0 0 0 10 0v-2M12 19v3"/></>, search: <><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>, plus: <path d="M12 5v14M5 12h14"/>,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>, pin: <><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,
+    users: <><circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 2-7 6-7s6 3 6 7"/><path d="M15 5a3 3 0 0 1 0 6m2 3c3 .5 4 3 4 6"/></>, check: <path d="m5 12 4 4L19 6"/>, arrow: <path d="M5 12h14M14 7l5 5-5 5"/>,
+    spark: <><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8z"/></>, close: <path d="m6 6 12 12M18 6 6 18"/>,
+    mail: <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></>, file: <><path d="M5 3h10l4 4v14H5z"/><path d="M14 3v5h5"/></>, clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></>,
+    chevron: <path d="m9 6 6 6-6 6"/>, menu: <path d="M4 7h16M4 12h16M4 17h16"/>, bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></>,
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{paths[name]}</svg>;
+}
+
+function RippleMark({ compact = false }: { compact?: boolean }) {
+  return <div className={`brand ${compact ? "brand-compact" : ""}`}><svg className="brand-mark" viewBox="0 0 48 48" aria-hidden><circle cx="24" cy="24" r="3.8" fill="currentColor"/><path d="M24 13a11 11 0 1 1-8.7 17.7"/><path d="M24 5.5A18.5 18.5 0 1 1 8.5 34" className="outer-ring"/></svg>{!compact && <span>ripple</span>}</div>;
+}
+
+const navItems: { label: string; icon: IconName }[] = [
+  { label: "Overview", icon: "home" }, { label: "Changes", icon: "pulse" }, { label: "Event map", icon: "map" }, { label: "Sources", icon: "source" }, { label: "Tasks", icon: "task" }, { label: "Integrations", icon: "plug" },
+];
+
+const scenarios = [
+  { id: "venue", label: "Venue changed", description: "The keynote has moved from Main Auditorium to Innovation Hall.", source: "Email from Facilities · 9:14 AM", title: "Keynote venue moved to Innovation Hall", certainty: 96 },
+  { id: "speaker", label: "Speaker cancelled", description: "Dr. Naina Rao can no longer join the 2:00 PM agent safety panel.", source: "Speaker email · 10:02 AM", title: "Agent safety panel needs a replacement speaker", certainty: 93 },
+  { id: "time", label: "Start time moved", description: "Registration will open at 8:00 AM instead of 8:30 AM.", source: "Organiser note · 10:21 AM", title: "Registration opens 30 minutes earlier", certainty: 98 },
+];
+
+const venueImpacts = [
+  { area: "Capacity", title: "Confirm overflow plan for 120 attendees", owner: "Maya", severity: "high", evidence: "Innovation Hall seats 380; 500 registrations are confirmed.", source: "Venue spec · page 2" },
+  { area: "Production", title: "Move keynote AV setup and streaming encoder", owner: "Arjun", severity: "high", evidence: "Run-of-show assigns the encoder and 4 wireless mics to Main Auditorium.", source: "Production plan · row 18" },
+  { area: "Wayfinding", title: "Replace 8 keynote signs before doors open", owner: "Maya", severity: "medium", evidence: "Print brief names Main Auditorium on entrance and corridor signs.", source: "Signage brief · v4" },
+  { area: "Catering", title: "Reroute the 10:30 coffee service", owner: "Rhea", severity: "medium", evidence: "Catering order places the first break outside Main Auditorium.", source: "Catering order · section 3" },
+  { area: "Attendees", title: "Draft venue update for 500 attendees", owner: "You", severity: "medium", evidence: "Calendar invite and welcome email both name Main Auditorium.", source: "Calendar + Gmail" },
+];
+
+const speakerImpacts = [
+  { area: "Programme", title: "Choose replacement or change panel format", owner: "You", severity: "high", evidence: "Panel requires 3 speakers; only 2 remain confirmed.", source: "Speaker tracker · row 7" },
+  { area: "Website", title: "Remove Dr. Naina Rao from the agenda", owner: "Arjun", severity: "medium", evidence: "Published agenda lists Naina as the lead panelist.", source: "Event site · agenda" },
+  { area: "Production", title: "Update lower-thirds and stage intro", owner: "Maya", severity: "medium", evidence: "Production deck includes speaker title card and introduction.", source: "Production deck · slide 22" },
+];
+
+const timeImpacts = [
+  { area: "Staffing", title: "Move volunteer call time to 7:30 AM", owner: "Maya", severity: "high", evidence: "Volunteer roster currently starts at 8:00 AM.", source: "Volunteer roster · shift A" },
+  { area: "Venue", title: "Confirm early access with campus security", owner: "You", severity: "medium", evidence: "Building access is contracted from 8:00 AM.", source: "Venue agreement · clause 4" },
+  { area: "Attendees", title: "Update calendar and welcome email", owner: "Arjun", severity: "medium", evidence: "Both sources currently state 8:30 AM registration.", source: "Calendar + Gmail" },
+];
+
+export function RippleWorkspace() {
+  const [activeNav, setActiveNav] = useState("Overview");
+  const [mobileNav, setMobileNav] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [scenarioId, setScenarioId] = useState("venue");
+  const [submitted, setSubmitted] = useState(false);
+  const [selectedImpact, setSelectedImpact] = useState(0);
+  const [accepted, setAccepted] = useState<number[]>([]);
+  const [toast, setToast] = useState("");
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const scenario = scenarios.find((item) => item.id === scenarioId) ?? scenarios[0];
+  const impacts = useMemo(() => scenarioId === "speaker" ? speakerImpacts : scenarioId === "time" ? timeImpacts : venueImpacts, [scenarioId]);
+  function showToast(message: string) { setToast(message); window.setTimeout(() => setToast(""), 2600); }
+  function chooseScenario(id: string) { setScenarioId(id); setSubmitted(false); setSelectedImpact(0); setAccepted([]); }
+  function acceptImpact(index: number) { setAccepted((current) => current.includes(index) ? current : [...current, index]); showToast("Task added to the response plan"); }
+
+  return <div className="app-shell">
+    <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
+      <div className="sidebar-head"><RippleMark/><button className="icon-button mobile-only" onClick={() => setMobileNav(false)} aria-label="Close menu"><Icon name="close"/></button></div>
+      <button className="event-switcher"><span className="event-monogram">A</span><span><strong>Astra 2026</strong><small>23 September · Campus</small></span><Icon name="chevron" size={15}/></button>
+      <nav className="main-nav" aria-label="Workspace">{navItems.map((item) => <button key={item.label} className={activeNav === item.label ? "active" : ""} onClick={() => { setActiveNav(item.label); setMobileNav(false); }}><Icon name={item.icon}/><span>{item.label}</span>{item.label === "Changes" && <em>3</em>}</button>)}</nav>
+      <div className="sidebar-foot"><div className="quiet-status"><span className="status-dot"/><div><strong>Sources are current</strong><small>Last checked 4 min ago</small></div></div><button className="profile"><span>AK</span><div><strong>Akshat</strong><small>Event lead</small></div><Icon name="chevron" size={14}/></button></div>
+    </aside>
+    {mobileNav && <button className="backdrop" onClick={() => setMobileNav(false)} aria-label="Close navigation"/>}
+    <main className="workspace">
+      <header className="topbar"><button className="icon-button mobile-only" onClick={() => setMobileNav(true)} aria-label="Open menu"><Icon name="menu"/></button><div className="breadcrumb"><span>Astra OpenAI Conference</span><Icon name="chevron" size={14}/><strong>{activeNav}</strong></div><div className="top-actions"><button className="search-button"><Icon name="search" size={17}/><span>Search event</span><kbd>⌘ K</kbd></button><button className="icon-button has-alert" aria-label="Notifications"><Icon name="bell"/></button><button className="primary-button" onClick={() => setComposerOpen(true)}><Icon name="plus" size={17}/>Report a change</button></div></header>
+      <div className="page-content">{activeNav === "Overview" ? <Overview scenario={scenario} impacts={impacts} accepted={accepted} selectedImpact={selectedImpact} setSelectedImpact={setSelectedImpact} acceptImpact={acceptImpact} openEvidence={() => setEvidenceOpen(true)} openComposer={() => setComposerOpen(true)} showToast={showToast}/> : <SectionView name={activeNav} onBack={() => setActiveNav("Overview")} openComposer={() => setComposerOpen(true)}/>}</div>
+    </main>
+
+    {composerOpen && <div className="modal-layer" role="dialog" aria-modal="true" aria-labelledby="change-title"><button className="modal-scrim" onClick={() => setComposerOpen(false)} aria-label="Close"/><section className="change-composer">
+      <div className="composer-head"><div><span className="eyebrow">New intelligence</span><h2 id="change-title">What changed?</h2><p>Ripple will trace what this affects before anything is sent or assigned.</p></div><button className="icon-button" onClick={() => setComposerOpen(false)} aria-label="Close"><Icon name="close"/></button></div>
+      {!submitted ? <><label className="input-label">Try a demo scenario</label><div className="scenario-grid">{scenarios.map((item) => <button key={item.id} onClick={() => chooseScenario(item.id)} className={scenarioId === item.id ? "selected" : ""}><span className="radio-dot"/><strong>{item.label}</strong><small>{item.description}</small></button>)}</div><label className="change-field"><span>Change details</span><textarea value={scenario.description} readOnly rows={3} aria-label="Change details"/></label><div className="source-attachment"><Icon name={scenario.id === "venue" || scenario.id === "speaker" ? "mail" : "file"}/><div><strong>{scenario.source}</strong><small>Source attached automatically</small></div><span className="verified"><Icon name="check" size={13}/> verified</span></div><div className="composer-footer"><span><Icon name="spark" size={16}/>Analysis takes about 3 seconds</span><button className="primary-button wide" onClick={() => setSubmitted(true)}>Find what this affects<Icon name="arrow" size={17}/></button></div></> : <div className="interpretation"><div className="ai-badge"><Icon name="spark"/></div><span className="eyebrow">Ripple understood</span><h3>{scenario.title}</h3><p>Based on the attached source, existing event facts, and connected plans.</p><div className="fact-change"><div><small>Previously</small><strong>{scenarioId === "venue" ? "Main Auditorium" : scenarioId === "speaker" ? "3 confirmed panelists" : "Registration · 8:30 AM"}</strong></div><Icon name="arrow"/><div><small>Now</small><strong>{scenarioId === "venue" ? "Innovation Hall" : scenarioId === "speaker" ? "2 confirmed panelists" : "Registration · 8:00 AM"}</strong></div></div><div className="confidence"><span>Confidence</span><div><i style={{width: `${scenario.certainty}%`}}/></div><strong>{scenario.certainty}%</strong></div><div className="composer-footer"><button className="text-button" onClick={() => setSubmitted(false)}>Edit details</button><button className="primary-button wide" onClick={() => { setComposerOpen(false); setActiveNav("Overview"); showToast(`${impacts.length} downstream impacts found`); }}>Confirm & trace impact<Icon name="arrow" size={17}/></button></div></div>}
+    </section></div>}
+
+    {evidenceOpen && <div className="evidence-drawer"><button className="modal-scrim" onClick={() => setEvidenceOpen(false)} aria-label="Close"/><aside><div className="drawer-head"><div><span className="eyebrow">Evidence</span><h2>Why Ripple flagged this</h2></div><button className="icon-button" onClick={() => setEvidenceOpen(false)}><Icon name="close"/></button></div><div className="evidence-source"><span className="gmail-icon">M</span><div><strong>Facilities update: room reassignment</strong><small>Priya Mehta · Today, 9:14 AM</small></div></div><div className="email-preview"><p>Hi team,</p><p>Due to the maintenance inspection, the <mark>Astra keynote must move from Main Auditorium to Innovation Hall</mark>. The new hall is available from 8:00 AM, but its seated capacity is 380.</p><p>Please update your production and attendee plans.</p><p>— Priya, Campus Facilities</p></div><div className="extracted-facts"><span>Extracted facts</span><div><small>Session</small><strong>Opening keynote</strong></div><div><small>New location</small><strong>Innovation Hall</strong></div><div><small>Capacity</small><strong>380 seats</strong></div></div><button className="secondary-button full" onClick={() => showToast("Source opened in a new preview")}>Open original source<Icon name="arrow" size={16}/></button></aside></div>}
+    {toast && <div className="toast"><span><Icon name="check" size={15}/></span>{toast}</div>}
+  </div>;
+}
+
+type Impact = typeof venueImpacts[number];
+
+function Overview({ scenario, impacts, accepted, selectedImpact, setSelectedImpact, acceptImpact, openEvidence, openComposer, showToast }: { scenario: typeof scenarios[number]; impacts: Impact[]; accepted: number[]; selectedImpact: number; setSelectedImpact: (value: number) => void; acceptImpact: (value: number) => void; openEvidence: () => void; openComposer: () => void; showToast: (message: string) => void; }) {
+  return <><section className="hero-row"><div><div className="date-kicker">Wednesday · 23 September 2026</div><h1>Good morning, Akshat.</h1><p>Astra is tomorrow. One change needs your attention.</p></div><div className="event-meta"><span><Icon name="calendar"/>Tomorrow · 9:00 AM</span><span><Icon name="pin"/>OpenAI Lab, Campus</span><span><Icon name="users"/>500 registered</span></div></section>
+  <section className="health-strip"><div className="health-score"><div className="score-ring"><strong>82</strong><small>/100</small></div><div><span className="eyebrow">Event health</span><h3>On track, with one blocker</h3><p>23 of 27 critical dependencies are confirmed.</p></div></div><div className="health-stat"><span className="stat-icon orange"><Icon name="pulse"/></span><div><strong>3</strong><small>open changes</small></div></div><div className="health-stat"><span className="stat-icon green"><Icon name="task"/></span><div><strong>8</strong><small>tasks due today</small></div></div><div className="health-stat"><span className="stat-icon cream"><Icon name="source"/></span><div><strong>12</strong><small>connected sources</small></div></div></section>
+  <div className="dashboard-grid"><section className="panel intelligence-panel"><div className="panel-head"><div><span className="eyebrow orange-text">Needs review</span><h2>One change, {impacts.length} consequences</h2></div><span className="time-label"><Icon name="clock" size={14}/>12 min ago</span></div><div className="change-origin" onClick={openEvidence} role="button" tabIndex={0}><div className="origin-icon"><Icon name="mail"/></div><div><small>Change detected from Gmail</small><h3>{scenario.title}</h3><p>{scenario.description}</p><button>View source evidence <Icon name="arrow" size={14}/></button></div><span className="confidence-pill">{scenario.certainty}% certain</span></div><div className="impact-list">{impacts.map((impact, index) => <article key={impact.title} className={`impact-item ${selectedImpact === index ? "selected" : ""} ${accepted.includes(index) ? "accepted" : ""}`} onClick={() => setSelectedImpact(index)}><span className={`impact-node ${impact.severity}`}><span/></span><div className="impact-copy"><div><span className="area-label">{impact.area}</span>{impact.severity === "high" && <span className="risk-label">Blocker</span>}</div><h4>{impact.title}</h4><p>{impact.evidence}</p><div className="impact-evidence"><Icon name="source" size={14}/>{impact.source}<span>·</span><span className="avatar-mini">{impact.owner.slice(0, 1)}</span>{impact.owner}</div></div><div className="impact-actions">{accepted.includes(index) ? <span className="accepted-label"><Icon name="check" size={14}/>Added</span> : <button onClick={(event) => { event.stopPropagation(); acceptImpact(index); }}>Add task</button>}<Icon name="chevron" size={16}/></div></article>)}</div><div className="panel-footer"><span>{accepted.length} of {impacts.length} added to the response plan</span><button className="secondary-button" onClick={() => showToast("Response plan is ready to review")}>Review response plan<Icon name="arrow" size={15}/></button></div></section>
+  <aside className="right-column"><section className="panel next-actions"><div className="panel-head"><div><span className="eyebrow">Today</span><h2>Your next actions</h2></div><button className="dots">•••</button></div><div className="action-list"><button onClick={() => showToast("Capacity task marked complete")}><span className="checkbox"/><div><strong>Confirm overflow room capacity</strong><small><i className="priority high"/>Due in 45 min · You</small></div></button><button onClick={() => showToast("Speaker reminder queued")}><span className="checkbox"/><div><strong>Chase final speaker consent</strong><small><i className="priority medium"/>Due 11:30 AM · You</small></div></button><button onClick={() => showToast("Volunteer brief opened")}><span className="checkbox"/><div><strong>Approve volunteer briefing</strong><small><i className="priority low"/>Due 2:00 PM · Maya</small></div></button></div><button className="text-link">View all 8 tasks <Icon name="arrow" size={14}/></button></section>
+  <section className="panel source-pulse"><div className="panel-head"><div><span className="eyebrow">Live context</span><h2>Source pulse</h2></div><span className="live-dot">Live</span></div><div className="source-row"><span className="source-logo gmail">M</span><div><strong>Gmail</strong><small>4 relevant threads</small></div><span>2 min</span></div><div className="source-row"><span className="source-logo drive">▲</span><div><strong>Google Drive</strong><small>7 event documents</small></div><span>8 min</span></div><div className="source-row"><span className="source-logo calendar">31</span><div><strong>Calendar</strong><small>12 scheduled items</small></div><span>Live</span></div><button className="add-source" onClick={() => showToast("Integration catalogue opened")}><Icon name="plus" size={16}/>Connect another source</button></section>
+  <section className="ask-card"><div className="ask-icon"><RippleMark compact/></div><div><span>Ask Ripple</span><strong>“What could still derail tomorrow?”</strong></div><button onClick={() => showToast("Ripple is reviewing 12 sources")}><Icon name="arrow"/></button></section></aside></div><button className="floating-report" onClick={openComposer}><Icon name="plus"/>Report change</button></>;
+}
+
+function SectionView({ name, onBack, openComposer }: { name: string; onBack: () => void; openComposer: () => void }) {
+  const copy: Record<string, [string, string]> = { Changes: ["Change intelligence", "Every decision, contradiction, and update—with the downstream work it created."], "Event map": ["The event, connected", "Explore how people, places, sessions, documents, and decisions depend on one another."], Sources: ["Sources of truth", "The messages, files, calendars, and notes Ripple uses to keep the event current."], Tasks: ["Response plan", "Work generated from changes, with evidence and an owner attached."], Integrations: ["Bring the event together", "Connect the tools your team already uses. You choose what Ripple can read and draft."] };
+  const [title, subtitle] = copy[name] ?? [name, "This workspace is ready for the next build step."];
+  return <section className="section-view"><button className="back-link" onClick={onBack}>← Overview</button><span className="eyebrow">Ripple workspace</span><h1>{title}</h1><p>{subtitle}</p><div className="section-placeholder"><div className="map-orbit"><span/><i/><b/></div><h2>{name === "Integrations" ? "Gmail, Drive and Calendar are ready to connect" : "This view is mapped into the product system"}</h2><p>The full screen follows the same evidence-first workflow shown on the overview. The presentation demo is centred on the complete change flow.</p><button className="primary-button" onClick={openComposer}><Icon name="plus" size={17}/>Report a change</button></div></section>;
+}

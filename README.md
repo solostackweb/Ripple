@@ -36,3 +36,15 @@ Copy `.env.example` to `.env.local` when credentials are available. Apply `supab
 - `gpt-5.6-sol`: escalation for ambiguous or high-stakes analysis
 
 The product keeps a human approval step between an AI suggestion and any external message or task assignment.
+
+## AI provider and key testing
+
+Ripple uses one server-side adapter for demo mode, OpenAI, and NVIDIA NIM. No provider code is duplicated, and keys never enter the browser bundle.
+
+1. Copy `.env.example` to `.env.local`.
+2. Add either `OPENAI_API_KEY` or `NVIDIA_API_KEY`.
+3. Leave `AI_PROVIDER=auto`, or explicitly set it to `openai`, `nvidia`, or `demo`.
+4. Restart the development server.
+5. Visit `http://localhost:3000/api/ai/health` to make one tiny request and verify the key, model, response, and latency.
+
+With no key, both the interface and `POST /api/analyze-change` use the deterministic demo engine. This makes the conference demonstration reliable even when Wi-Fi or provider access is unavailable.

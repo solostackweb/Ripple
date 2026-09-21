@@ -66,6 +66,7 @@ kbd { padding: 2px 5px; background: var(--paper-2); border: 1px solid #d8d6cf; b
 .primary-button, .secondary-button { min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 6px; font-size: 11px; font-weight: 630; cursor: pointer; transition: .16s ease; }
 .primary-button { border: 1px solid var(--green); color: white; background: var(--green); box-shadow: 0 3px 10px rgba(23,77,60,.15); }
 .primary-button:hover { background: var(--green-2); transform: translateY(-1px); }
+.primary-button:disabled { opacity: .65; cursor: wait; transform: none; }
 .secondary-button { border: 1px solid var(--line-dark); color: var(--green); background: white; }
 .secondary-button:hover { border-color: var(--green); }
 .page-content { max-width: 1510px; margin: 0 auto; padding: 38px clamp(22px, 3vw, 46px) 70px; }
@@ -184,6 +185,7 @@ kbd { padding: 2px 5px; background: var(--paper-2); border: 1px solid #d8d6cf; b
 .ai-badge { width: 48px; height: 48px; margin: 0 auto 12px; display: grid; place-items: center; color: var(--orange); background: var(--orange-pale); border-radius: 50%; }
 .interpretation h3 { margin: 7px 0; font-family: Georgia, serif; font-size: 25px; font-weight: 400; }
 .interpretation > p { color: var(--muted); font-size: 10px; }
+.provider-label { display: inline-block; margin-top: 5px; padding: 4px 7px; color: var(--green); background: var(--green-pale); border-radius: 999px; font-family: var(--font-mono); font-size: 7px; text-transform: uppercase; }
 .fact-change { margin: 22px 0 16px; padding: 15px; display: grid; grid-template-columns: 1fr 30px 1fr; align-items: center; gap: 10px; background: #f0eee8; border-radius: 8px; text-align: left; }
 .fact-change div { display: flex; flex-direction: column; gap: 4px; }
 .fact-change small { color: #8a918e; font-size: 8px; text-transform: uppercase; }

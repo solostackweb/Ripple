@@ -53,21 +53,52 @@ const timeImpacts = [
   { area: "Attendees", title: "Update calendar and welcome email", owner: "Arjun", severity: "medium", evidence: "Both sources currently state 8:30 AM registration.", source: "Calendar + Gmail" },
 ];
 
+type AnalysisResponse = {
+  change: { summary: string; before: string | null; after: string; confidence: number };
+  impacts: Array<{ area: string; title: string; explanation: string; severity: "low" | "medium" | "high" | "critical"; suggestedOwner: string | null }>;
+  provider: "demo" | "openai" | "nvidia";
+  model: string;
+};
+
 export function RippleWorkspace() {
   const [activeNav, setActiveNav] = useState("Overview");
   const [mobileNav, setMobileNav] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [scenarioId, setScenarioId] = useState("venue");
   const [submitted, setSubmitted] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [selectedImpact, setSelectedImpact] = useState(0);
   const [accepted, setAccepted] = useState<number[]>([]);
   const [toast, setToast] = useState("");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
-  const scenario = scenarios.find((item) => item.id === scenarioId) ?? scenarios[0];
-  const impacts = useMemo(() => scenarioId === "speaker" ? speakerImpacts : scenarioId === "time" ? timeImpacts : venueImpacts, [scenarioId]);
+  const baseScenario = scenarios.find((item) => item.id === scenarioId) ?? scenarios[0];
+  const scenario = analysis ? { ...baseScenario, title: analysis.change.summary, certainty: Math.round(analysis.change.confidence * 100) } : baseScenario;
+  const impacts = useMemo(() => {
+    if (analysis) return analysis.impacts.map((impact) => ({ area: impact.area, title: impact.title, owner: impact.suggestedOwner ?? "Unassigned", severity: impact.severity, evidence: impact.explanation, source: baseScenario.source }));
+    return scenarioId === "speaker" ? speakerImpacts : scenarioId === "time" ? timeImpacts : venueImpacts;
+  }, [analysis, baseScenario.source, scenarioId]);
   function showToast(message: string) { setToast(message); window.setTimeout(() => setToast(""), 2600); }
-  function chooseScenario(id: string) { setScenarioId(id); setSubmitted(false); setSelectedImpact(0); setAccepted([]); }
+  function chooseScenario(id: string) { setScenarioId(id); setSubmitted(false); setAnalysis(null); setSelectedImpact(0); setAccepted([]); }
   function acceptImpact(index: number) { setAccepted((current) => current.includes(index) ? current : [...current, index]); showToast("Task added to the response plan"); }
+  async function runAnalysis() {
+    setAnalyzing(true);
+    try {
+      const response = await fetch("/api/analyze-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: baseScenario.description, sourceId: `demo-${scenarioId}-source` }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message ?? "Analysis failed");
+      setAnalysis(result as AnalysisResponse);
+      setSubmitted(true);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Analysis failed");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
 
   return <div className="app-shell">
     <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
@@ -84,7 +115,7 @@ export function RippleWorkspace() {
 
     {composerOpen && <div className="modal-layer" role="dialog" aria-modal="true" aria-labelledby="change-title"><button className="modal-scrim" onClick={() => setComposerOpen(false)} aria-label="Close"/><section className="change-composer">
       <div className="composer-head"><div><span className="eyebrow">New intelligence</span><h2 id="change-title">What changed?</h2><p>Ripple will trace what this affects before anything is sent or assigned.</p></div><button className="icon-button" onClick={() => setComposerOpen(false)} aria-label="Close"><Icon name="close"/></button></div>
-      {!submitted ? <><label className="input-label">Try a demo scenario</label><div className="scenario-grid">{scenarios.map((item) => <button key={item.id} onClick={() => chooseScenario(item.id)} className={scenarioId === item.id ? "selected" : ""}><span className="radio-dot"/><strong>{item.label}</strong><small>{item.description}</small></button>)}</div><label className="change-field"><span>Change details</span><textarea value={scenario.description} readOnly rows={3} aria-label="Change details"/></label><div className="source-attachment"><Icon name={scenario.id === "venue" || scenario.id === "speaker" ? "mail" : "file"}/><div><strong>{scenario.source}</strong><small>Source attached automatically</small></div><span className="verified"><Icon name="check" size={13}/> verified</span></div><div className="composer-footer"><span><Icon name="spark" size={16}/>Analysis takes about 3 seconds</span><button className="primary-button wide" onClick={() => setSubmitted(true)}>Find what this affects<Icon name="arrow" size={17}/></button></div></> : <div className="interpretation"><div className="ai-badge"><Icon name="spark"/></div><span className="eyebrow">Ripple understood</span><h3>{scenario.title}</h3><p>Based on the attached source, existing event facts, and connected plans.</p><div className="fact-change"><div><small>Previously</small><strong>{scenarioId === "venue" ? "Main Auditorium" : scenarioId === "speaker" ? "3 confirmed panelists" : "Registration · 8:30 AM"}</strong></div><Icon name="arrow"/><div><small>Now</small><strong>{scenarioId === "venue" ? "Innovation Hall" : scenarioId === "speaker" ? "2 confirmed panelists" : "Registration · 8:00 AM"}</strong></div></div><div className="confidence"><span>Confidence</span><div><i style={{width: `${scenario.certainty}%`}}/></div><strong>{scenario.certainty}%</strong></div><div className="composer-footer"><button className="text-button" onClick={() => setSubmitted(false)}>Edit details</button><button className="primary-button wide" onClick={() => { setComposerOpen(false); setActiveNav("Overview"); showToast(`${impacts.length} downstream impacts found`); }}>Confirm & trace impact<Icon name="arrow" size={17}/></button></div></div>}
+      {!submitted ? <><label className="input-label">Try a demo scenario</label><div className="scenario-grid">{scenarios.map((item) => <button key={item.id} onClick={() => chooseScenario(item.id)} className={scenarioId === item.id ? "selected" : ""}><span className="radio-dot"/><strong>{item.label}</strong><small>{item.description}</small></button>)}</div><label className="change-field"><span>Change details</span><textarea value={baseScenario.description} readOnly rows={3} aria-label="Change details"/></label><div className="source-attachment"><Icon name={baseScenario.id === "venue" || baseScenario.id === "speaker" ? "mail" : "file"}/><div><strong>{baseScenario.source}</strong><small>Source attached automatically</small></div><span className="verified"><Icon name="check" size={13}/> verified</span></div><div className="composer-footer"><span><Icon name="spark" size={16}/>{analyzing ? "Reading source and tracing connections…" : "Uses the configured provider or offline demo engine"}</span><button className="primary-button wide" disabled={analyzing} onClick={runAnalysis}>{analyzing ? "Analyzing…" : "Find what this affects"}{!analyzing && <Icon name="arrow" size={17}/>}</button></div></> : <div className="interpretation"><div className="ai-badge"><Icon name="spark"/></div><span className="eyebrow">Ripple understood</span><h3>{scenario.title}</h3><p>Based on the attached source, existing event facts, and connected plans.</p>{analysis && <span className="provider-label">{analysis.provider === "demo" ? "Offline demo engine" : analysis.provider === "nvidia" ? "NVIDIA NIM" : "OpenAI"} · {analysis.model}</span>}<div className="fact-change"><div><small>Previously</small><strong>{analysis?.change.before ?? (scenarioId === "venue" ? "Main Auditorium" : scenarioId === "speaker" ? "3 confirmed panelists" : "Registration · 8:30 AM")}</strong></div><Icon name="arrow"/><div><small>Now</small><strong>{analysis?.change.after ?? (scenarioId === "venue" ? "Innovation Hall" : scenarioId === "speaker" ? "2 confirmed panelists" : "Registration · 8:00 AM")}</strong></div></div><div className="confidence"><span>Confidence</span><div><i style={{width: `${scenario.certainty}%`}}/></div><strong>{scenario.certainty}%</strong></div><div className="composer-footer"><button className="text-button" onClick={() => setSubmitted(false)}>Edit details</button><button className="primary-button wide" onClick={() => { setComposerOpen(false); setActiveNav("Overview"); showToast(`${impacts.length} downstream impacts found`); }}>Confirm & trace impact<Icon name="arrow" size={17}/></button></div></div>}
     </section></div>}
 
     {evidenceOpen && <div className="evidence-drawer"><button className="modal-scrim" onClick={() => setEvidenceOpen(false)} aria-label="Close"/><aside><div className="drawer-head"><div><span className="eyebrow">Evidence</span><h2>Why Ripple flagged this</h2></div><button className="icon-button" onClick={() => setEvidenceOpen(false)}><Icon name="close"/></button></div><div className="evidence-source"><span className="gmail-icon">M</span><div><strong>Facilities update: room reassignment</strong><small>Priya Mehta · Today, 9:14 AM</small></div></div><div className="email-preview"><p>Hi team,</p><p>Due to the maintenance inspection, the <mark>Astra keynote must move from Main Auditorium to Innovation Hall</mark>. The new hall is available from 8:00 AM, but its seated capacity is 380.</p><p>Please update your production and attendee plans.</p><p>— Priya, Campus Facilities</p></div><div className="extracted-facts"><span>Extracted facts</span><div><small>Session</small><strong>Opening keynote</strong></div><div><small>New location</small><strong>Innovation Hall</strong></div><div><small>Capacity</small><strong>380 seats</strong></div></div><button className="secondary-button full" onClick={() => showToast("Source opened in a new preview")}>Open original source<Icon name="arrow" size={16}/></button></aside></div>}

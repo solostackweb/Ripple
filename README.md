@@ -28,7 +28,7 @@ Open `http://localhost:3000`. Use **Start Live mode** for real Supabase data, or
 - Composio Connect Link support for Gmail, Drive, Calendar, Slack, Notion, Trello, Linear, Asana, Outlook, and OneDrive
 - Honest setup states and per-integration setup instructions
 
-See [LIVE_SETUP.md](./LIVE_SETUP.md) for the exact Supabase, AI, Composio, and Vercel setup. Presentation files are in [`demo-data/astra-2026`](./demo-data/astra-2026).
+See [LIVE_SETUP.md](./LIVE_SETUP.md) for the exact Supabase, AI, Composio, and Vercel setup. Use [DEMO_RUNBOOK.md](./DEMO_RUNBOOK.md) as the minute-by-minute presenter script. Presentation files are in [`demo-data/astra-2026`](./demo-data/astra-2026).
 
 ## Useful checks
 

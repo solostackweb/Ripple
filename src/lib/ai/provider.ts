@@ -125,8 +125,9 @@ function demoAnalysis(text: string, sourceId = "manual-change"): ImpactAnalysis 
           ["Communication", "Update calendar and welcome email", "Attendee sources still show the previous time.", "medium"],
         ];
 
+  const summary = isVenue ? "Opening keynote moved to Innovation Hall" : isSpeaker ? "Speaker availability changed for the agent safety panel" : "Event schedule changed";
   return impactAnalysisSchema.parse({
-    change: { summary: text, kind, before, after, effectiveAt: null, confidence: 0.96, evidence: [{ quote: text, sourceId }] },
+    change: { summary, kind, before, after, effectiveAt: null, confidence: 0.96, evidence: [{ quote: text, sourceId }] },
     impacts: impacts.map(([area, title, explanation, severity]) => ({
       area, title, explanation, severity, affectedEntityIds: [], evidenceSourceIds: [sourceId], suggestedOwner: null, suggestedAction: title,
     })),

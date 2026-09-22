@@ -1,0 +1,14 @@
+start,end,session,room,owner,capacity
+08:30,09:00,Registration,OpenAI Lab Lobby,Maya Sharma,500
+09:00,09:20,Welcome and opening,Main Auditorium,Akshat,500
+09:30,10:15,Opening keynote: Agents that act,Main Auditorium,Dr. Rhea Kapoor,500
+10:15,10:45,Coffee and demos,Auditorium Foyer,Rhea Singh,500
+10:45,12:00,Workshop: Build your first agent,Lab A,Arjun Mehta,120
+10:45,12:00,Workshop: Reliable tool use,Lab B,Naina Rao,100
+12:00,13:00,Lunch,Central Courtyard,Rhea Singh,500
+13:00,14:00,Student product showcase,Innovation Hall,Akshat,380
+14:00,15:00,Panel: Safety for useful agents,Innovation Hall,Naina Rao,380
+15:15,16:30,Agentic workflows lab,Lab A,Arjun Mehta,120
+16:45,17:30,Closing showcase,Main Auditorium,Akshat,500
+17:30,18:00,Networking,Auditorium Foyer,Maya Sharma,500
+

@@ -6,15 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "supabase:check": "node scripts/check-supabase.mjs",
+    "supabase:setup": "node scripts/setup-supabase.mjs",
+    "test:live": "node scripts/test-live-flow.mjs"
   },
   "dependencies": {
+    "@composio/core": "^0.17.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
+    "@xyflow/react": "^12.11.6",
     "next": "16.3.5",
     "openai": "^7.20.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-icons": "^5.7.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

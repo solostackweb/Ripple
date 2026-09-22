@@ -1,50 +1,41 @@
 # Ripple
 
-Ripple is event change intelligence. It connects event facts, documents, messages, decisions, and tasks so an organiser can see what one change affects before it becomes ten problems.
+Ripple is event change intelligence: it turns event files, messages, calendars, people, rooms, and tasks into a traceable knowledge graph, then shows what one late change affects.
 
-## Demo
+The product has two deliberate modes:
 
-The current build is intentionally useful without credentials. It includes realistic Astra conference data and a complete presentation flow:
+- **Demo mode** is deterministic, runs without credentials, and contains the complete Astra conference story.
+- **Live mode** authenticates with Supabase, uploads real source files to private storage, persists the event graph, analyzes changes with the selected AI provider, and saves tasks.
 
-1. Report a venue, speaker, or schedule change.
-2. Review Ripple's interpretation, evidence source, and confidence.
-3. Confirm the change and inspect its downstream consequences.
-4. Add selected consequences to the response plan.
-
-Run it locally:
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. Use **Start Live mode** for real Supabase data, or keep the default offline presentation workspace.
 
-## Technical foundation
+## What is included
 
-- Next.js 16 App Router, React 19, TypeScript, and Tailwind CSS 4
-- Supabase Postgres/Auth with row-level security
-- OpenAI structured outputs validated by Zod
-- Composio planned for initial Gmail, Google Drive, and Calendar connections
+- Next.js 16, React 19, TypeScript, and responsive custom CSS
+- Supabase Auth, Postgres, row-level security, and private Storage
+- OpenAI and NVIDIA NIM through one OpenAI-compatible adapter
+- Browser-session API key testing; keys are never written to the database
+- File import and a complete Astra data pack
+- Interactive React Flow event graph with evidence inspection
+- Live changes, impacts, response tasks, event search, skeletons, and loading states
+- Composio Connect Link support for Gmail, Drive, Calendar, Slack, Notion, Trello, Linear, Asana, Outlook, and OneDrive
+- Honest setup states and per-integration setup instructions
 
-Copy `.env.example` to `.env.local` when credentials are available. Apply `supabase/migrations/202609220001_initial_schema.sql` to create the multi-tenant event graph, sources, changes, impacts, and tasks.
+See [LIVE_SETUP.md](./LIVE_SETUP.md) for the exact Supabase, AI, Composio, and Vercel setup. Presentation files are in [`demo-data/astra-2026`](./demo-data/astra-2026).
 
-## Model routing
+## Useful checks
 
-- `gpt-5.6-luna`: extraction and classification from messages/files
-- `gpt-5.6-terra`: multi-hop impact analysis and communication drafts
-- `gpt-5.6-sol`: escalation for ambiguous or high-stakes analysis
+```bash
+npm run supabase:check
+npm run lint
+npm run build
+```
 
-The product keeps a human approval step between an AI suggestion and any external message or task assignment.
-
-## AI provider and key testing
-
-Ripple uses one server-side adapter for demo mode, OpenAI, and NVIDIA NIM. No provider code is duplicated, and keys never enter the browser bundle.
-
-1. Copy `.env.example` to `.env.local`.
-2. Add either `OPENAI_API_KEY` or `NVIDIA_API_KEY`.
-3. Leave `AI_PROVIDER=auto`, or explicitly set it to `openai`, `nvidia`, or `demo`.
-4. Restart the development server.
-5. Visit `http://localhost:3000/api/ai/health` to make one tiny request and verify the key, model, response, and latency.
-
-With no key, both the interface and `POST /api/analyze-change` use the deterministic demo engine. This makes the conference demonstration reliable even when Wi-Fi or provider access is unavailable.
+Ripple keeps a human approval step between an AI suggestion and any external message or task assignment.

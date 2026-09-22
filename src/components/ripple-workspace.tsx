@@ -1,6 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { AiPreferences } from "@/lib/data/live-types";
+import type { LiveEventData } from "@/lib/data/live-types";
+import { astraEntities, astraRelationships } from "@/lib/data/astra";
+import { EventGraph } from "@/components/graph/event-graph";
+import { SiGmail, SiGooglecalendar, SiGoogledrive, SiTrello, SiWhatsapp } from "react-icons/si";
+import { FaSlack } from "react-icons/fa";
+
+const demoGraphData: Pick<LiveEventData, "entities" | "relationships"> = {
+  entities: astraEntities.map((entity) => ({ id: entity.key, name: entity.name, kind: entity.kind, attributes: entity.attributes, confidence: .96 })),
+  relationships: astraRelationships.map(([from, to, relation], index) => ({ id: `demo-rel-${index}`, from_entity_id: from, to_entity_id: to, relation, confidence: .95 })),
+};
 
 type IconName = "home" | "pulse" | "map" | "source" | "task" | "plug" | "search" | "plus" | "calendar" | "pin" | "users" | "check" | "arrow" | "spark" | "close" | "mail" | "file" | "clock" | "chevron" | "menu" | "bell";
 
@@ -60,7 +71,7 @@ type AnalysisResponse = {
   model: string;
 };
 
-export function RippleWorkspace() {
+export function RippleWorkspace({ ai }: { ai?: AiPreferences }) {
   const [activeNav, setActiveNav] = useState("Overview");
   const [mobileNav, setMobileNav] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
@@ -87,7 +98,7 @@ export function RippleWorkspace() {
       const response = await fetch("/api/analyze-change", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: baseScenario.description, sourceId: `demo-${scenarioId}-source` }),
+        body: JSON.stringify({ text: baseScenario.description, sourceId: `demo-${scenarioId}-source`, ai }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message ?? "Analysis failed");
@@ -143,16 +154,15 @@ function SectionView({ name, onBack, openComposer }: { name: string; onBack: () 
 function SectionContent({ name }: { name: string }) {
   if (name === "Changes") return <div className="changes-table panel"><div className="table-head"><span>Change</span><span>Source</span><span>Impact</span><span>Status</span></div><div className="change-row"><span className="change-type orange"><Icon name="pin"/></span><div><strong>Keynote moved to Innovation Hall</strong><small>12 minutes ago · 96% confidence</small></div><span><b className="source-logo gmail">M</b>Facilities email</span><span><strong>5</strong> consequences</span><em className="review">Needs review</em></div><div className="change-row"><span className="change-type green"><Icon name="clock"/></span><div><strong>Catering delivery confirmed for 7:45 AM</strong><small>Yesterday, 6:22 PM · 99% confidence</small></div><span><b className="source-logo drive">▲</b>Vendor sheet</span><span><strong>2</strong> updates</span><em className="confirmed">Confirmed</em></div><div className="change-row"><span className="change-type cream"><Icon name="users"/></span><div><strong>Agent safety panel gained a moderator</strong><small>Yesterday, 4:03 PM · 94% confidence</small></div><span><b className="source-logo calendar">31</b>Calendar</span><span><strong>3</strong> updates</span><em className="confirmed">Confirmed</em></div></div>;
 
-  if (name === "Event map") return <div className="graph-panel panel"><div className="graph-toolbar"><span><i className="graph-dot event"/>Event</span><span><i className="graph-dot person"/>Person</span><span><i className="graph-dot place"/>Place</span><span><i className="graph-dot document"/>Source</span><button><Icon name="search" size={15}/>Find a node</button></div><div className="event-graph"><svg viewBox="0 0 760 390" preserveAspectRatio="none" aria-hidden><path d="M380 195 190 85M380 195 590 72M380 195 650 245M380 195 490 335M380 195 165 300M190 85 83 174M590 72 690 145M650 245 490 335M165 300 83 174"/></svg><GraphNode className="main-node" icon="spark" label="Astra 2026" sub="Event · tomorrow"/><GraphNode className="node-speaker" icon="users" label="Opening keynote" sub="Session · 9:30 AM"/><GraphNode className="node-venue" icon="pin" label="Innovation Hall" sub="Venue · 380 seats"/><GraphNode className="node-email" icon="mail" label="Facilities update" sub="Gmail · 9:14 AM"/><GraphNode className="node-av" icon="plug" label="AV production" sub="Vendor · confirmed"/><GraphNode className="node-attendees" icon="users" label="500 attendees" sub="Audience"/><GraphNode className="node-signage" icon="file" label="Signage brief" sub="Drive · version 4"/></div><div className="graph-insight"><Icon name="spark"/><div><strong>Ripple found a capacity conflict</strong><small>Innovation Hall seats 120 fewer people than the confirmed registration count.</small></div><button>Inspect impact <Icon name="arrow" size={14}/></button></div></div>;
+  if (name === "Event map") return <div className="graph-panel panel demo-interactive-graph"><EventGraph data={demoGraphData}/><div className="graph-insight"><Icon name="spark"/><div><strong>Ripple found a capacity conflict</strong><small>Innovation Hall seats 120 fewer people than the confirmed registration count. Select any node to inspect its evidence.</small></div></div></div>;
 
   if (name === "Sources") return <div className="source-catalog"><div className="source-summary panel"><div><span className="eyebrow">Coverage</span><strong>12</strong><small>connected sources</small></div><div><span className="eyebrow">Freshness</span><strong>4m</strong><small>since last sync</small></div><div><span className="eyebrow">Extracted</span><strong>84</strong><small>verified facts</small></div></div><div className="source-cards"><SourceCard mark="M" tone="red" name="Gmail" detail="4 selected event threads" sync="Synced 2 min ago"/><SourceCard mark="▲" tone="green" name="Google Drive" detail="7 planning documents" sync="Synced 8 min ago"/><SourceCard mark="31" tone="blue" name="Google Calendar" detail="12 sessions and deadlines" sync="Watching live"/><SourceCard mark="↑" tone="neutral" name="Uploaded files" detail="1 venue specification" sync="Added yesterday"/></div></div>;
 
   if (name === "Tasks") return <div className="task-board"><TaskColumn title="Needs action" count={3} tone="orange" tasks={["Confirm overflow room capacity", "Move keynote streaming encoder", "Approve venue update draft"]}/><TaskColumn title="In progress" count={2} tone="yellow" tasks={["Replace keynote signage", "Reroute coffee service"]}/><TaskColumn title="Resolved" count={4} tone="green" tasks={["Confirm speaker arrival time", "Publish volunteer roster", "Lock catering headcount"]}/></div>;
 
-  return <div className="integration-grid"><IntegrationCard mark="M" tone="red" name="Gmail" detail="Detect changes in selected threads and draft attendee updates." connected/><IntegrationCard mark="▲" tone="green" name="Google Drive" detail="Ground event facts in plans, briefs, sheets, and venue documents." connected/><IntegrationCard mark="31" tone="blue" name="Google Calendar" detail="Watch sessions, deadlines, rooms, and speaker availability." connected/><IntegrationCard mark="S" tone="purple" name="Slack" detail="Bring team decisions and approvals into the event record."/><IntegrationCard mark="T" tone="blue" name="Trello" detail="Send approved consequences to the team's task board."/><IntegrationCard mark="W" tone="green" name="WhatsApp" detail="Prepare opt-in attendee alerts for urgent event changes."/></div>;
+  return <div className="integration-grid"><IntegrationCard mark={<SiGmail/>} tone="red" name="Gmail" detail="Detect changes in selected threads and draft attendee updates." connected/><IntegrationCard mark={<SiGoogledrive/>} tone="green" name="Google Drive" detail="Ground event facts in plans, briefs, sheets, and venue documents." connected/><IntegrationCard mark={<SiGooglecalendar/>} tone="blue" name="Google Calendar" detail="Watch sessions, deadlines, rooms, and speaker availability." connected/><IntegrationCard mark={<FaSlack/>} tone="purple" name="Slack" detail="Bring team decisions and approvals into the event record."/><IntegrationCard mark={<SiTrello/>} tone="blue" name="Trello" detail="Send approved consequences to the team's task board."/><IntegrationCard mark={<SiWhatsapp/>} tone="green" name="WhatsApp" detail="Prepare opt-in attendee alerts for urgent event changes."/></div>;
 }
 
-function GraphNode({ className, icon, label, sub }: { className: string; icon: IconName; label: string; sub: string }) { return <div className={`graph-node ${className}`}><span><Icon name={icon} size={16}/></span><div><strong>{label}</strong><small>{sub}</small></div></div>; }
 function SourceCard({ mark, tone, name, detail, sync }: { mark: string; tone: string; name: string; detail: string; sync: string }) { return <article className="source-card panel"><span className={`integration-mark ${tone}`}>{mark}</span><div><h3>{name}</h3><p>{detail}</p></div><span className="connected-state"><i/>Connected</span><small>{sync}</small><button>Open source <Icon name="arrow" size={14}/></button></article>; }
 function TaskColumn({ title, count, tone, tasks }: { title: string; count: number; tone: string; tasks: string[] }) { return <section className="task-column"><header><span><i className={tone}/>{title}</span><b>{count}</b></header>{tasks.map((task, index) => <article key={task}><span className="area-label">{index === 0 ? "Venue" : index === 1 ? "Production" : "Communication"}</span><h3>{task}</h3><p>Created from keynote venue change</p><footer><span className="avatar-mini">{index === 1 ? "A" : "M"}</span><small>{index === 0 ? "Due in 45 min" : "Due today"}</small></footer></article>)}</section>; }
-function IntegrationCard({ mark, tone, name, detail, connected = false }: { mark: string; tone: string; name: string; detail: string; connected?: boolean }) { return <article className="integration-card panel"><div className="integration-top"><span className={`integration-mark ${tone}`}>{mark}</span>{connected && <span className="connected-state"><i/>Connected</span>}</div><h3>{name}</h3><p>{detail}</p><button className={connected ? "secondary-button" : "primary-button"}>{connected ? "Manage" : "Connect"}<Icon name="arrow" size={14}/></button></article>; }
+function IntegrationCard({ mark, tone, name, detail, connected = false }: { mark: React.ReactNode; tone: string; name: string; detail: string; connected?: boolean }) { const [active, setActive] = useState(connected); return <article className="integration-card panel"><div className="integration-top"><span className={`integration-mark ${tone}`}>{mark}</span>{active && <span className="connected-state"><i/>Connected</span>}</div><h3>{name}</h3><p>{detail}</p><button className={active ? "secondary-button" : "primary-button"} onClick={() => setActive((value) => !value)}>{active ? "Manage" : "Connect"}<Icon name="arrow" size={14}/></button></article>; }

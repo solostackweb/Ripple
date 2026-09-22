@@ -1,5 +1,5 @@
-import { RippleWorkspace } from "@/components/ripple-workspace";
+import { RippleApp } from "@/components/ripple-app";
 
 export default function Home() {
-  return <RippleWorkspace />;
+  return <RippleApp />;
 }

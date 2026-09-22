@@ -9,23 +9,33 @@ type ProviderConfig = {
   client: OpenAI | null;
 };
 
-export function getProviderConfig(): ProviderConfig {
-  const requested = (process.env.AI_PROVIDER ?? "auto").toLowerCase();
+export type ProviderOverride = {
+  provider?: AiProvider;
+  model?: string;
+  apiKey?: string;
+};
 
-  if ((requested === "openai" || requested === "auto") && process.env.OPENAI_API_KEY) {
+export function getProviderConfig(override?: ProviderOverride): ProviderConfig {
+  const requested = (override?.provider ?? process.env.AI_PROVIDER ?? "auto").toLowerCase();
+
+  if (requested === "demo") return { provider: "demo", model: "ripple-demo-engine", client: null };
+
+  const openAiKey = override?.provider === "openai" ? override.apiKey || process.env.OPENAI_API_KEY : process.env.OPENAI_API_KEY;
+  if ((requested === "openai" || requested === "auto") && openAiKey) {
     return {
       provider: "openai",
-      model: process.env.AI_MODEL ?? "gpt-5-mini",
-      client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
+      model: override?.model || process.env.AI_MODEL || "gpt-5-mini",
+      client: new OpenAI({ apiKey: openAiKey }),
     };
   }
 
-  if ((requested === "nvidia" || requested === "auto") && process.env.NVIDIA_API_KEY) {
+  const nvidiaKey = override?.provider === "nvidia" ? override.apiKey || process.env.NVIDIA_API_KEY : process.env.NVIDIA_API_KEY;
+  if ((requested === "nvidia" || requested === "auto") && nvidiaKey) {
     return {
       provider: "nvidia",
-      model: process.env.AI_MODEL ?? "openai/gpt-oss-20b",
+      model: override?.model || process.env.AI_MODEL || "openai/gpt-oss-20b",
       client: new OpenAI({
-        apiKey: process.env.NVIDIA_API_KEY,
+        apiKey: nvidiaKey,
         baseURL: "https://integrate.api.nvidia.com/v1",
       }),
     };
@@ -34,8 +44,8 @@ export function getProviderConfig(): ProviderConfig {
   return { provider: "demo", model: "ripple-demo-engine", client: null };
 }
 
-export async function testProvider() {
-  const config = getProviderConfig();
+export async function testProvider(override?: ProviderOverride) {
+  const config = getProviderConfig(override);
   if (!config.client) {
     return {
       ok: true,
@@ -62,8 +72,8 @@ export async function testProvider() {
   };
 }
 
-export async function analyzeChange(input: { text: string; sourceId?: string }): Promise<ImpactAnalysis & { provider: AiProvider; model: string }> {
-  const config = getProviderConfig();
+export async function analyzeChange(input: { text: string; sourceId?: string }, override?: ProviderOverride): Promise<ImpactAnalysis & { provider: AiProvider; model: string }> {
+  const config = getProviderConfig(override);
   if (!config.client) return { ...demoAnalysis(input.text, input.sourceId), provider: config.provider, model: config.model };
 
   const prompt = `You are Ripple, an evidence-first event operations analyst.
@@ -123,4 +133,3 @@ function demoAnalysis(text: string, sourceId = "manual-change"): ImpactAnalysis 
     unknowns: isVenue ? ["Whether an overflow room is available"] : [],
   });
 }
-
